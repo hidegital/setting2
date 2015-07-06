@@ -1,5 +1,8 @@
+var DEST, SRC, _, b, browserSync, browserify, buffer, bundle, customOpts, gulp, gutil, mocha, opts, paths, plumber, source, watchify;
+
 var gulp       = require( 'gulp' );
 var watch      = require( 'gulp-watch' );
+//var fs         = require('fs');
 
 var browserify = require( 'browserify' );
 var watchify   = require( 'watchify' );//browserifyのコンパイルを早くする
@@ -47,7 +50,17 @@ var scssPath          = './src/scss';
 var stylusPath          = './src/stylus';
 //var bootstrapScssPath = './bootstrap/assets/stylesheets';
 
-//＠TODO babel,sprite,ejs
+//var jsonData = require('./src/data/index.json');
+
+//json
+var ejsJson = require('gulp-ejs-json');
+
+gutil = require('gulp-util');
+_ = require('underscore');
+DEST = "./dist";
+SRC = "./src";
+
+//＠TODO sprite,json,minifi
 
 /**
  * sass
@@ -84,6 +97,7 @@ gulp.task('stylus', function () {
 
 /*ejs*/
 gulp.task('ejs', function() {
+    //var json = JSON.parse(fs.readFileSync("./src/json/index.json"));
     gulp.src(
         ["src/ejs/**/*.ejs",'!' + "src/ejs/**/_*.ejs"]//「’!’ + “app/dev/ejs/**/_*.ejs”」の部分で、「_(アンダーバー)で始まるejsファイルは参照しない
     )
@@ -93,12 +107,40 @@ gulp.task('ejs', function() {
 
 
 
+/*babelify*/
+paths = {
+    js: [SRC + "/**/*.js"],
+    reload: [DEST + "/**/*", "!" + DEST + "/**/*.css"]
+};
+
+customOpts = {
+    entries: [SRC + "/js/jquery1.11.1.js"],
+    debug: true
+};
+
+opts = _.extend({}, watchify.args, customOpts);
+
+b = watchify(browserify(opts));
+
+b.transform('babelify', { compact: false });
+
+bundle = function() {
+    return b.bundle().on('error', gutil.log.bind(gutil, 'Browserify Error')).pipe(source('./jquery.js')).pipe(buffer()).pipe(gulp.dest(DEST));
+};
+
+gulp.task('browserify', bundle);
+
+b.on('update', bundle);
+
+b.on('log', gutil.log);
+
+
 /**
  * browserify
  */
-gulp.task( 'browserify', function() {
-    return jscompile( false );
-} );
+//gulp.task( 'browserify', function() {
+//    return jscompile( false );
+//} );
 
 /**
  * watchify
@@ -146,7 +188,7 @@ gulp.task( 'bsReload', function() {
 } );
 
 //watch
-gulp.task( 'watch', ['stylus', 'watchify','ejs'], function() {
+gulp.task( 'watch', ['stylus', 'browserify','ejs'], function() {
     gulp.watch( stylusPath + '/*.styl', ['stylus','bsReload'] );
     gulp.watch(["src/ejs/**/*.ejs", "src/ejs/**/_*.ejs"],['ejs','bsReload']);
 } );
@@ -159,6 +201,8 @@ gulp.task('default',['watch'], function () {
             baseDir: ['./dist/']
         }
     });
+    //return gulp.src('data/index.json');
+
     //gulp.watch(['./src/scss/*.scss','./src/scss/**/_*.scss'],['sass']);
     //gulp.watch(["src/ejs/*.ejs","src/ejs/**/_*.ejs"],['ejs']);
     //gulp.watch(['./src/coffee/*.coffee','./src/coffee/**/_*.coffee'],['coffee']);
@@ -168,3 +212,21 @@ gulp.task('default',['watch'], function () {
 gulp.task('clean', function(cb) {
     del(['./dist/**/*.html','./dist/**/*.css','./dist/**/*.xml'], cb);
 });
+
+
+//gulp.task('test', function() {
+//    return gulp.src("./test/**/*.js").pipe(mocha({
+//        reporter: 'spec'
+//    }));
+//});
+
+//gulp.task('watch', function() {
+//    gulp.watch(paths.js, ['browserify']);
+//    return gulp.watch(paths.reload, function() {
+//        return browserSync.reload({
+//            once: true
+//        });
+//    });
+//});
+
+//gulp.task('default', ['watch', 'browserSync']);
