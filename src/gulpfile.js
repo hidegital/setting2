@@ -55,12 +55,15 @@ var stylusPath          = './src/stylus';
 //json
 var ejsJson = require('gulp-ejs-json');
 
+//sprite
+var spritesmith = require('gulp.spritesmith');
+
 gutil = require('gulp-util');
 _ = require('underscore');
 DEST = "./dist";
 SRC = "./src";
 
-//＠TODO sprite,json,minifi
+//＠TODO json,min
 
 /**
  * sass
@@ -106,7 +109,6 @@ gulp.task('ejs', function() {
 });
 
 
-
 /*babelify*/
 paths = {
     js: [SRC + "/**/*.js"],
@@ -114,7 +116,7 @@ paths = {
 };
 
 customOpts = {
-    entries: [SRC + "/js/jquery1.11.1.js"],
+    entries: ["src/js/app.js"],
     debug: true
 };
 
@@ -122,10 +124,10 @@ opts = _.extend({}, watchify.args, customOpts);
 
 b = watchify(browserify(opts));
 
-b.transform('babelify', { compact: false });
+b.transform('babelify');
 
 bundle = function() {
-    return b.bundle().on('error', gutil.log.bind(gutil, 'Browserify Error')).pipe(source('./jquery.js')).pipe(buffer()).pipe(gulp.dest(DEST));
+    return b.bundle().on('error', gutil.log.bind(gutil, 'Browserify Error')).pipe(source('./js/app.js')).pipe(buffer()).pipe(gulp.dest(DEST));
 };
 
 gulp.task('browserify', bundle);
@@ -174,6 +176,43 @@ function jscompile( is_watch ) {
     return rebundle();
 }
 
+//sprite stylus
+gulp.task('sprite', function () {
+    var spriteData = gulp.src('src/img/sprite/*.png').pipe(spritesmith({
+        imgName: 'sprite.png',
+        cssName: '_sprite.styl',
+        //imgPath: 'dist/img/sprite/sprite.png',
+        cssFormat: 'stylus',
+        cssVarMap: function (sprite) {
+            sprite.name = 'sprite-' + sprite.name;
+        }
+    }));
+
+    spriteData.img
+        .pipe(gulp.dest('src/img/sprite/'))
+        .pipe(gulp.dest('dist/img/'));
+
+    spriteData.css
+        .pipe(gulp.dest('src/stylus/'));
+});
+//gulp.task('sprite', function () {
+//    var spriteData = gulp.src('src/img/sprite/*.png') //スプライトにする愉快な画像達
+//        .pipe(spritesmith({
+//            imgName: 'sprite.png', //スプライトの画像
+//            cssName: '_sprite.scss', //生成されるscss
+//            imgPath: '/img/sprite.png', //生成されるscssに記載されるパス
+//            cssFormat: 'scss', //フォーマット
+//            cssVarMap: function (sprite) {
+//                sprite.name = 'sprite-' + sprite.name; //VarMap(生成されるScssにいろいろな変数の一覧を生成)
+//            }
+//        }));
+//    spriteData.img.pipe(gulp.dest('src/img/')); //imgNameで指定したスプライト画像の保存先
+//    spriteData.css.pipe(gulp.dest('src/scss/')); //cssNameで指定したcssの保存先
+//});
+
+gulp.task( 'bsReload', function() {
+    browserSync.reload()
+} );
 
 /**
  * watch
@@ -183,14 +222,12 @@ function jscompile( is_watch ) {
 //    gulp.watch( scssPath + '/*.scss', ['sass'] );
 //} );
 
-gulp.task( 'bsReload', function() {
-    browserSync.reload()
-} );
 
 //watch
 gulp.task( 'watch', ['stylus', 'browserify','ejs'], function() {
     gulp.watch( stylusPath + '/*.styl', ['stylus','bsReload'] );
     gulp.watch(["src/ejs/**/*.ejs", "src/ejs/**/_*.ejs"],['ejs','bsReload']);
+    gulp.watch("src/js/*.js", ['browserify','bsReload'] );
 } );
 
 gulp.task('default',['watch'], function () {
@@ -209,6 +246,7 @@ gulp.task('default',['watch'], function () {
     //gulp.watch(['./src/js/*.js'],['compile-js']);
 });
 
+/*distファイル削除*/
 gulp.task('clean', function(cb) {
     del(['./dist/**/*.html','./dist/**/*.css','./dist/**/*.xml'], cb);
 });

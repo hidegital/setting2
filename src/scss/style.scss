@@ -8,7 +8,7 @@ $color: #fff;
 
 
 html{
-  background: #F6F7EF;
+  background: #ccc;
 }
 
 
@@ -73,6 +73,8 @@ h1{
     }
   }
 
-
+  li {
+    display: flex;
+  }
 
 }

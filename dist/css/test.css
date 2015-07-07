@@ -26,4 +26,5 @@ li {
   box-sizing: border-box;
   font-size: 12px;
   display: table-cell;
+  widows: 100px;
 }

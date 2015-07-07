@@ -1,0 +1,114 @@
+/*
+Stylus variables are information about icon's compiled state, stored under its original file name
+
+.icon-home {
+  width: $icon_home_width;
+}
+
+The large array-like variables contain all information about a single icon
+$icon_home = x y offset_x offset_y width height total_width total_height image_path;
+
+At the bottom of this section, we provide information about the spritesheet itself
+$spritesheet = width height image $spritesheet_sprites;
+*/
+$area_pink_name = 'areaPink';
+$area_pink_x = 68px;
+$area_pink_y = 0px;
+$area_pink_offset_x = -68px;
+$area_pink_offset_y = 0px;
+$area_pink_width = 17px;
+$area_pink_height = 24px;
+$area_pink_total_width = 85px;
+$area_pink_total_height = 62px;
+$area_pink_image = 'sprite.png';
+$area_pink = 68px 0px -68px 0px 17px 24px 85px 62px 'sprite.png' 'areaPink';
+$area_white_name = 'areaWhite';
+$area_white_x = 0px;
+$area_white_y = 31px;
+$area_white_offset_x = 0px;
+$area_white_offset_y = -31px;
+$area_white_width = 22px;
+$area_white_height = 31px;
+$area_white_total_width = 85px;
+$area_white_total_height = 62px;
+$area_white_image = 'sprite.png';
+$area_white = 0px 31px 0px -31px 22px 31px 85px 62px 'sprite.png' 'areaWhite';
+$calendar_pink_name = 'calendarPink';
+$calendar_pink_x = 22px;
+$calendar_pink_y = 31px;
+$calendar_pink_offset_x = -22px;
+$calendar_pink_offset_y = -31px;
+$calendar_pink_width = 29px;
+$calendar_pink_height = 22px;
+$calendar_pink_total_width = 85px;
+$calendar_pink_total_height = 62px;
+$calendar_pink_image = 'sprite.png';
+$calendar_pink = 22px 31px -22px -31px 29px 22px 85px 62px 'sprite.png' 'calendarPink';
+$sprite_name = 'sprite';
+$sprite_x = 0px;
+$sprite_y = 0px;
+$sprite_offset_x = 0px;
+$sprite_offset_y = 0px;
+$sprite_width = 68px;
+$sprite_height = 31px;
+$sprite_total_width = 85px;
+$sprite_total_height = 62px;
+$sprite_image = 'sprite.png';
+$sprite = 0px 0px 0px 0px 68px 31px 85px 62px 'sprite.png' 'sprite';
+$spritesheet_width = 85px;
+$spritesheet_height = 62px;
+$spritesheet_image = 'sprite.png';
+$spritesheet_sprites = $area_pink $area_white $calendar_pink $sprite;
+$spritesheet = 85px 62px 'sprite.png' $spritesheet_sprites;
+
+/*
+The provided mixins are intended to be used with the array-like variables
+
+.icon-home {
+  spriteWidth($icon_home)
+}
+
+.icon-email {
+  sprite($icon_email)
+}
+*/
+spriteWidth($sprite) {
+  width: $sprite[4];
+}
+
+spriteHeight($sprite) {
+  height: $sprite[5];
+}
+
+spritePosition($sprite) {
+  background-position: $sprite[2] $sprite[3];
+}
+
+spriteImage($sprite) {
+  background-image: url($sprite[8]);
+}
+
+sprite($sprite) {
+  spriteImage($sprite)
+  spritePosition($sprite)
+  spriteWidth($sprite)
+  spriteHeight($sprite)
+}
+
+/*
+The `sprites` mixin generates identical output to the CSS template
+  but can be overridden inside of Stylus
+
+This must be run when you have at least 2 sprites.
+  If run with a single sprite, then there will be reference errors.
+
+sprites($spritesheet_sprites);
+*/
+sprites($sprites) {
+  for $sprite in $sprites {
+    $sprite_name = $sprite[9];
+    .{$sprite_name} {
+      sprite($sprite);
+    }
+  }
+}
