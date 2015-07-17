@@ -20,6 +20,8 @@ pleeease = require 'gulp-pleeease' #autoprefixer
 csscomb = require 'gulp-csscomb'
 cssmin = require 'gulp-cssmin'
 
+babelify = require 'babelify'
+
 ejs = require 'gulp-ejs'
 
 sitemap = require 'gulp-sitemap'
@@ -64,33 +66,37 @@ SRC = "./src";
 
 
 #
-#customOpts =
-#    entries: ["#{SRC}/app.js"]
-#    debug: true
-#opts = _.extend {}, watchify.args, customOpts
-#b = watchify browserify(opts)
-#b.transform 'babelify'
-#bundle = ->
-#    b.bundle().on 'error',  gutil.log.bind gutil, 'Browserify Error'
-#    .pipe source './js/app.js'
-#    .pipe buffer()
-#    .pipe gulp.dest DEST
-#gulp.task 'browserify', bundle
-#b.on 'update', bundle
-#
-#gulp.task 'browserify', bundle
-#b.on 'update', bundle
-#b.on 'log', gutil.log
+customOpts =
+    entries: ["#{SRC}/js/app.js"]
+    debug: true
+opts = _.extend {}, watchify.args, customOpts
+b = watchify browserify(opts)
+b.transform 'babelify'
+bundle = ->
+    b.bundle().on 'error',  gutil.log.bind gutil, 'Browserify Error'
+    .pipe source './js/app.js'
+    .pipe buffer()
+    .pipe gulp.dest DEST
+gulp.task 'browserify', bundle
+b.on 'update', bundle
+
+gulp.task 'browserify', bundle
+b.on 'update', bundle
+b.on 'log', gutil.log
 
 
 paths =
     js: ["#{SRC}/**/*.js"]
 
-gulp.task 'browserify', ->
-    browserify 'src/js/app.js', debug: true
-      .transform 'babelify'
-      .pipe source 'dist/js/app.js'
-      .pipe gulp.dest 'dist/js/app.js'
+#gulp.task 'browserify', ->
+#    browserify(debug: true)
+#    .transform(babelify)
+#    .require('src/js/app.js', entry: true)
+#    .bundle()
+#    .on('error', (err) ->
+#        console.log 'Error: ' + err.message
+#        return
+#    ).pipe fs.createWriteStream('bundle.js')
 
 gulp.task 'browserSync', ->
     browserSync

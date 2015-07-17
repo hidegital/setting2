@@ -2,14 +2,15 @@ console.log('aaa');
 console.log('sss');
 console.log('ddd');
 
+//arrowFunctions.js
+[1, 2, 3].map( x => x * 2)
 
-// Lexical this
-var bob = {
-    _name: "Bob",
-    _friends: [],
-    printFriends() {
-    this._friends.forEach(f =>
-    console.log(this._name + " knows " + f));
-}
+
+
+
+
+
+
+
 
 
