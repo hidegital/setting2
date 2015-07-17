@@ -4,8 +4,11 @@ var gulp       = require( 'gulp' );
 var watch      = require( 'gulp-watch' );
 //var fs         = require('fs');
 
-var browserify = require( 'browserify' );
-var watchify   = require( 'watchify' );//browserifyのコンパイルを早くする
+var fs = require("fs");
+var browserify = require("browserify");
+var babelify = require("babelify");
+
+//var watchify   = require( 'watchify' );//browserifyのコンパイルを早くする
 var uglify     = require( 'gulp-uglify' );
 var source     = require( 'vinyl-source-stream' );
 var buffer     = require( 'vinyl-buffer' );
@@ -107,74 +110,28 @@ gulp.task('ejs', function() {
         .pipe(ejs())
         .pipe(gulp.dest('./dist/'))
 });
+//
+//browserify({ debug: true })
+//    .transform(babelify)
+//    .require("./src/js/app.js", { entry: true })
+//    .bundle()
+//    .on("error", function (err) { console.log("Error: " + err.message); })
+//    .pipe(fs.createWriteStream("bundle.js"));
 
+//var babelify = require('babelify');
+//var browserify = require('browserify');
+//var source = require('vinyl-source-stream');
 
-/*babelify*/
-paths = {
-    js: [SRC + "/**/*.js"],
-    reload: [DEST + "/**/*", "!" + DEST + "/**/*.css"]
-};
-
-customOpts = {
-    entries: ["src/js/app.js"],
-    debug: true
-};
-
-opts = _.extend({}, watchify.args, customOpts);
-
-b = watchify(browserify(opts));
-
-b.transform('babelify');
-
-bundle = function() {
-    return b.bundle().on('error', gutil.log.bind(gutil, 'Browserify Error')).pipe(source('./js/app.js')).pipe(buffer()).pipe(gulp.dest(DEST));
-};
-
-gulp.task('browserify', bundle);
-
-b.on('update', bundle);
-
-b.on('log', gutil.log);
-
-
-/**
- * browserify
- */
-//gulp.task( 'browserify', function() {
-//    return jscompile( false );
-//} );
-
-/**
- * watchify
- */
-gulp.task( 'watchify', function() {
-    return jscompile( false );
-} );
-
-function jscompile( is_watch ) {
-    var bundler;
-    if ( is_watch ) {
-        bundler = watchify( browserify( jsSrcPath + '/app.js' ) );
-    } else {
-        bundler = browserify( jsSrcPath + '/app.js' );
-    }
-
-    function rebundle() {
-        return bundler
-            .bundle()
-            .pipe( source( 'app.js' ) )
-            .pipe( buffer() )
-            .pipe( uglify() )
-            .pipe( gulp.dest( jsDestPath ) );
-    }
-    bundler.on( 'update', function() {
-        rebundle();
-    } );
-    bundler.on( 'log', function( message ) {
-        console.log( message );
-    } );
-    return rebundle();
-}
+gulp.task('modules', function() {
+    browserify({
+        entries: './js/app.js',
+        debug: true
+    })
+        .transform(babelify)
+        .bundle()
+        .pipe(source('output.js'))
+        .pipe(gulp.dest('./dist'));
+});
 
 //sprite stylus
 gulp.task('sprite', function () {
@@ -224,10 +181,10 @@ gulp.task( 'bsReload', function() {
 
 
 //watch
-gulp.task( 'watch', ['stylus', 'browserify','ejs'], function() {
+gulp.task( 'watch', ['stylus', 'modules','ejs'], function() {
     gulp.watch( stylusPath + '/*.styl', ['stylus','bsReload'] );
     gulp.watch(["src/ejs/**/*.ejs", "src/ejs/**/_*.ejs"],['ejs','bsReload']);
-    gulp.watch("src/js/*.js", ['browserify','bsReload'] );
+    gulp.watch("src/js/*.js", ['modules','bsReload'] );
 } );
 
 gulp.task('default',['watch'], function () {

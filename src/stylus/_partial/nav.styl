@@ -1,0 +1,90 @@
+.localNav
+  display table
+  width 100%
+  height 100%
+  &__table
+    display table
+    width 100%
+    height 100%
+    &__list
+      float left
+      box-sizing border-box
+      text-align center
+      vertical-align middle
+      width 20%
+      height 45px
+      background-color #00a30a
+      background-image linear-gradient(0deg, rgb(0,133,8) 0%, rgb(0,163,10) 41%, rgb(0,185,11) 100%)
+      border-right 1px solid #FFF
+      border-bottom 1px solid #FFF !important
+      a
+        color #fdfeff
+      span
+        font-size 10px
+        line-height 1.2em
+        width 100%
+        font-weight bold
+        display inline-block
+      &:last-child
+        border-right none
+      &__inner
+        width 100%
+        display -webkit-box
+        display box
+        height 100%
+        box-align center
+        box-pack center
+    .localNav__table__list
+      border-bottom 1px solid #FFF
+  &__table__list--active
+    padding 3px !important
+    @extends .localNav__table__list
+    .localNav__table__list__inner
+    position relative
+    background #fff601 !important
+    background linear-gradient( 0deg, rgb(229,194,0) 0%, rgb(255,246,0) 100%) !important
+    span
+      color #00a30a !important
+  &__table__list--blue
+    @extends .localNav__table__list
+    background-image linear-gradient(0deg, rgb(20,87,218) 0%, rgb(41,110,247) 100%)
+  &__top
+    display table-cell
+    box-sizing border-box
+    text-align center
+    vertical-align middle
+    width 20%
+    height 100%
+    background-image linear-gradient(0deg, rgb(0,133,8) 0%, rgb(0,163,10) 41%, rgb(0,185,11) 100%)
+    border-bottom 1px solid #FFF
+    border-right 1px solid #FFF
+    &__inner
+      width 100%
+      display -webkit-box
+      display box
+      height 100%
+      box-align center
+      box-pack center
+      span
+        font-weight bold
+        display inline-block
+  &__top--active
+    @extends .localNav__top
+    padding 3px
+    .localNav__top__inner
+      background #fff601 !important
+      background linear-gradient( 0deg, rgb(229,194,0) 0%, rgb(255,246,0) 100%) !important
+      span
+        color #00a30a !important
+
+
+
+$active-triangle
+  display block
+  bottom 0
+  margin auto
+  border-width 0 6px 6px 6px
+  border-style solid
+  border-color transparent transparent #009209 transparent
+  width 0
+  height 0

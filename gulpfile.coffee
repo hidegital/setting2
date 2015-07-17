@@ -4,7 +4,7 @@ fs         = require 'fs'
 
 browserify = require 'browserify'
 watchify   = require 'watchify' #browserifyのコンパイルを早くする
-uglify     = require 'gulp-uglify'
+uglify     = require 'gulp-uglify' #js圧縮
 source     = require 'vinyl-source-stream' #gulp で Browserify を扱う際に利用
 buffer     = require 'vinyl-buffer'
 
@@ -14,15 +14,21 @@ reload = browserSync.reload;
 data = require 'gulp-data'
 plumber = require 'gulp-plumber' #エラー時に止めない
 
-sass = require 'gulp-sass' #node-sass rubyのsass, stylusとどれ使うか
+sass = require 'gulp-ruby-sass' #node-sass rubyのsass, stylusとどれ使うか
 stylus = require 'gulp-stylus'
 pleeease = require 'gulp-pleeease' #autoprefixer
 csscomb = require 'gulp-csscomb'
 cssmin = require 'gulp-cssmin'
+#scsslint = require 'gulp-scss-lint'
+csslint = require 'gulp-csslint'
+sourcemaps = require 'gulp-sourcemaps'
+
 
 babelify = require 'babelify'
 
 ejs = require 'gulp-ejs'
+htmlhint = require 'gulp-htmlhint'
+prettify = require 'gulp-prettify'
 
 sitemap = require 'gulp-sitemap'
 
@@ -34,21 +40,29 @@ coffee  = require 'gulp-coffee'
 concat  = require 'gulp-concat'
 uglify  = require 'gulp-uglify'
 
-AUTOPREFIXER_BROWSERS = [
-    'ie >= 10',
-    'ff >= 30',
-    'chrome >= 34',
-    'safari >= 7',
-    'opera >= 23',
-];
+#imagemin
+imagemin = require 'gulp-imagemin'
 
-cssSrcPath        = './src/scss'
-cssDestPath       = './css'
+#AUTOPREFIXER_BROWSERS = [
+#    'ie >= 10',
+#    'ff >= 30',
+#    'chrome >= 34',
+#    'safari >= 7',
+#    'opera >= 23',
+#];
+
 jsSrcPath         = './src/js'
-jsDestPath        = './js'
+distJs            = './dist/js'
+buildJs           = './build/js'
 scssPath          = './src/scss'
 stylusPath        = './src/stylus'
-bootstrapScssPath = './bootstrap/assets/stylesheets'
+distCss           = './dist/css'
+buildCss          = './build/css'
+
+#bootstrapScssPath = './bootstrap/assets/stylesheets'
+srcImg            = './src/img'
+#distImg           = './dist/img'
+buildImg          = './build/img'
 
 jsonData = require './src/data/index.json'
 
@@ -64,8 +78,6 @@ DEST = "./dist";
 SRC = "./src";
 
 
-
-#
 customOpts =
     entries: ["#{SRC}/js/app.js"]
     debug: true
@@ -106,33 +118,43 @@ gulp.task 'browserSync', ->
             baseDir: ['./dist/']
         }
 
-
-
+#やはりstylusのがよさそう
 gulp.task 'stylus', ->
-    gulp.src ['src/stylus/*.styl','src/stylus/**/_*.styl']
+    gulp.src [stylusPath + '/*.styl','!' + stylusPath + '/_*/*.styl']
     .pipe plumber()
+    .pipe sourcemaps.init()
     .pipe stylus()
+    .pipe sourcemaps.write()
     .pipe pleeease(
         minifier: false,
         autoprefixer: {"browsers": ["last 4 versions"]}
     )
+    .pipe csscomb()
     .on('error', console.error.bind(console))
     .pipe (header('@charset "utf-8";\n'))
     .pipe (gulp.dest('./dist/css/'))
     .on('end', reload);
 
 gulp.task 'sass', ->
-    gulp.src ['src/scss/*.scss','src/scss/**/_*.scss']
+    gulp.src ['src/scss/*.scss','!' + 'src/scss/**/_*.scss']
     .pipe plumber()
-    .pipe stylus()
+    .pipe sass()
     .pipe pleeease(
         minifier: false,
         autoprefixer: {"browsers": ["last 4 versions"]}
     )
+    .pipe csscomb()
+    .pipe(sourcemaps.write())
+#    .pipe scsslint()
     .on('error', console.error.bind(console))
     .pipe (header('@charset "utf-8";\n'))
     .pipe (gulp.dest('./dist/css/'))
     .on('end', reload);
+
+gulp.task 'csslint', ->
+    gulp.src(distCss + '/*.css')
+        .pipe csslint()
+        .pipe csslint.reporter()
 
 gulp.task 'ejs', ->
     gulp.src ["src/ejs/**/*.ejs",'!' + "src/ejs/**/_*.ejs"]
@@ -140,43 +162,74 @@ gulp.task 'ejs', ->
     .pipe ejs()
     .pipe gulp.dest DEST
 
+gulp.task 'htmlhint', ->
+    gulp.src('./dist/*.html')
+        .pipe htmlhint()
+        .pipe htmlhint.reporter()
+
+#sprite
 gulp.task 'spriteStylus', ->
     spriteData = gulp.src 'src/img/sprite/*.png'
     .pipe plumber()
     .pipe spritesmith
         imgName: 'sprite.png',
-        cssName: '_sprite.styl',
-    #        imgPath: 'dist/img/sprite/sprite.png',
+        cssName: 'sprite.styl',
         cssFormat: 'stylus'
     spriteData.img
-    .pipe(gulp.dest('src/img/sprite/'))
-    .pipe(gulp.dest('dist/img/'));
+    .pipe gulp.dest(srcImg +  '/sprite/')
+    .pipe gulp.dest('dist/img/')
     spriteData.css
-    .pipe(gulp.dest('src/stylus/'));
-
+    .pipe gulp.dest(stylusPath + '/_partial');
 
 gulp.task 'spriteSass', ->
-    spriteData = gulp.src 'src/img/sprite/*.png'
+    spriteData = gulp.src srcImg + '/sprite/*.png'
     .pipe plumber()
     .pipe spritesmith
         imgName: 'sprite.png',
-        cssName: '_sprite.styl',
-    #        imgPath: 'dist/img/sprite/sprite.png',
-        cssFormat: 'sass'
+        cssName: '_sprite.scss',
+        cssFormat: 'scss'
     spriteData.img
-    .pipe(gulp.dest('src/img/sprite/'))
-    .pipe(gulp.dest('dist/img/'));
+    .pipe gulp.dest(srcImg + '/sprite/')
+    .pipe gulp.dest('dist/img/')
     spriteData.css
-    .pipe(gulp.dest('src/scss/'));
+    .pipe gulp.dest(scssPath)
+
+#minify系
+gulp.task 'imagemin', ->
+    dstGlob = buildImg;
+    imageminOptions = optimizationLevel: 7
+    gulp.src [srcImg + '/**/*.+(jpg|jpeg|png|gif|svg)','!' + srcImg + '/sprite/*.+(jpg|jpeg|png|gif|svg)']
+        .pipe imagemin(imageminOptions)
+        .pipe gulp.dest(dstGlob)
+
+#concat順番通りになってる？？
+gulp.task 'cssmin', ->
+    gulp.src [distCss + '/*.css']
+        .pipe concat('style.css')
+        .pipe cssmin()
+        .pipe gulp.dest(buildCss)
+
+gulp.task 'jsmin', ->
+    gulp.src [distJs + '/*.js']
+        .pipe uglify()
+        .pipe gulp.dest(buildJs)
+
+gulp.task 'htmlprettify', ->
+    gulp.src(DEST + '/*.html')
+        .pipe prettify({indent_size: 2})
+        .pipe gulp.dest('./build')
 
 
 gulp.task 'bsReload', ->
     browserSync.reload
-#gulp.task 'watch', ->
-#    gulp.watch stylusPath + '/*.styl', ['stylus','bsReload']
+
 gulp.task 'watch', ->
-    gulp.watch scssPath + '/*.scss', ['sass','bsReload']
-    gulp.watch ['src/ejs/**/*.ejs', 'src/ejs/**/_*.ejs'], ['ejs','bsReload']
+#    gulp.watch scssPath + '/*.scss', ['sass','csslint','bsReload']
+    gulp.watch [stylusPath + '/*.styl',stylusPath + '/_partial/*.styl'], ['stylus','bsReload']
+    gulp.watch ['src/ejs/**/*.ejs', 'src/ejs/**/_*.ejs'], ['ejs','htmlhint','bsReload']
     gulp.watch 'src/js/*.js', ['browserify']
 
+#TODO clean dell使う？？ sitemap生成試す
 gulp.task 'default', ['watch', 'browserSync']
+gulp.task 'lint', ['csslint']
+gulp.task 'build', ['imagemin','cssmin','jsmin','htmlprettify']

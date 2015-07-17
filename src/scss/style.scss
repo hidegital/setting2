@@ -27,13 +27,14 @@ h1{
 
 @include media(980px){
   body{
-    color: "#ccc";
+    color: #ccc;
   }
 }
 
 @include media(980px){
   h1{
-    color: "#ccc";
+    color: #ccc;
+    background: #000;
   }
 }
 
@@ -58,15 +59,12 @@ h1{
     background: #000;
   }
 
-
-
   p{
     margin: 10px;
     @include media(768px){
       float: left;
+      position: absolute;
     }
-
-
 
     a{
       display: block;
@@ -75,6 +73,17 @@ h1{
 
   li {
     display: flex;
+  }
+
+
+
+  .aaa {
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(red, blue);
+
+    left: 0;
+
   }
 
 }
