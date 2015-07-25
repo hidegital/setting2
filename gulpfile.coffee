@@ -14,6 +14,8 @@ reload = browserSync.reload;
 data = require 'gulp-data'
 plumber = require 'gulp-plumber' #エラー時に止めない
 
+
+#sass = require 'gulp-sass'
 sass = require 'gulp-ruby-sass' #node-sass rubyのsass, stylusとどれ使うか
 stylus = require 'gulp-stylus'
 pleeease = require 'gulp-pleeease' #autoprefixer
@@ -83,7 +85,7 @@ customOpts =
     debug: true
 opts = _.extend {}, watchify.args, customOpts
 b = watchify browserify(opts)
-b.transform 'babelify'
+b.transform 'babelify', { compact: false }
 bundle = ->
     b.bundle().on 'error',  gutil.log.bind gutil, 'Browserify Error'
     .pipe source './js/app.js'
@@ -136,9 +138,10 @@ gulp.task 'stylus', ->
     .on('end', reload);
 
 gulp.task 'sass', ->
-    gulp.src ['src/scss/*.scss','!' + 'src/scss/**/_*.scss']
+    return sass './src/scss/',{sourcemap: true}
+#  gulp.src ['src/scss/*.scss','!' + 'src/scss/**/_*.scss'] gulp-sassでの書き方
+#    .pipe sass()
     .pipe plumber()
-    .pipe sass()
     .pipe pleeease(
         minifier: false,
         autoprefixer: {"browsers": ["last 4 versions"]}
@@ -224,9 +227,10 @@ gulp.task 'bsReload', ->
     browserSync.reload
 
 gulp.task 'watch', ->
+    gulp.watch scssPath + '/*.scss', ['sass','bsReload']
 #    gulp.watch scssPath + '/*.scss', ['sass','csslint','bsReload']
-    gulp.watch [stylusPath + '/*.styl',stylusPath + '/_partial/*.styl'], ['stylus','bsReload']
-    gulp.watch ['src/ejs/**/*.ejs', 'src/ejs/**/_*.ejs'], ['ejs','htmlhint','bsReload']
+#    gulp.watch [stylusPath + '/*.styl',stylusPath + '/_partial/*.styl'], ['stylus','bsReload']
+    gulp.watch ['src/ejs/**/*.ejs', 'src/ejs/**/_*.ejs'], ['ejs','htmlhint','htmlprettify','bsReload']
     gulp.watch 'src/js/*.js', ['browserify']
 
 #TODO clean dell使う？？ sitemap生成試す
