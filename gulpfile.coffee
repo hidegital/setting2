@@ -231,7 +231,7 @@ gulp.task 'watch', ->
 #    gulp.watch scssPath + '/*.scss', ['sass','csslint','bsReload']
 #    gulp.watch [stylusPath + '/*.styl',stylusPath + '/_partial/*.styl'], ['stylus','bsReload']
     gulp.watch ['src/ejs/**/*.ejs', 'src/ejs/**/_*.ejs'], ['ejs','htmlhint','htmlprettify','bsReload']
-    gulp.watch 'src/js/*.js', ['browserify']
+    gulp.watch 'src/js/*.js', ['browserify' ,'bsReload']
 
 #TODO clean dell使う？？ sitemap生成試す
 gulp.task 'default', ['watch', 'browserSync']
