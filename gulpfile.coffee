@@ -224,7 +224,7 @@ gulp.task 'htmlprettify', ->
 
 
 gulp.task 'bsReload', ->
-    browserSync.reload
+    browserSync.reload()
 
 gulp.task 'watch', ->
     gulp.watch scssPath + '/*.scss', ['sass','bsReload']
